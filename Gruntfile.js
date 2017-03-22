@@ -9,7 +9,7 @@ module.exports = function( grunt ) {
 
 		addtextdomain: {
 			options: {
-				textdomain: 'cronify-term-count-update',
+				textdomain: 'lightweight-term-count-update',
 			},
 			target: {
 				files: {
@@ -30,8 +30,8 @@ module.exports = function( grunt ) {
 			target: {
 				options: {
 					domainPath: '/languages',
-					mainFile: 'cronify-term-count-update.php',
-					potFilename: 'cronify-term-count-update.pot',
+					mainFile: 'lightweight-term-count-update.php',
+					potFilename: 'lightweight-term-count-update.pot',
 					potHeaders: {
 						poedit: true,
 						'x-poedit-keywordslist': true
