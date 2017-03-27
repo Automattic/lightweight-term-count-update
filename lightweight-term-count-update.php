@@ -38,8 +38,12 @@ class LTCU_Plugin {
 
 		$number_of_terms_updated = 0;
 
-		foreach ( (array) get_object_taxonomies( $post->post_type ) as $tax ) {
-			$tt_ids = wp_get_object_terms( $post->ID, $tax, [ 'fields' => 'tt_ids'] );
+		foreach ( (array) get_object_taxonomies( $post->post_type, 'object' ) as $tax ) {
+			$tt_ids = wp_get_object_terms( $post->ID, $tax->name, [ 'fields' => 'tt_ids'] );
+			//respect if a taxonomy has a callback override
+			if ( !empty( $tax->update_count_callback ) ) {
+				call_user_func( $tax->update_count_callback, $tt_ids, $tax->name );
+			}
 			if ( $tt_ids ) {
 				$tt_ids_string = '(' . implode( ',', $tt_ids ) . ')';
 				if ( $transition_type === 'increment' ) {
