@@ -37,7 +37,7 @@ class LTCU_Plugin {
 		}
 
 		foreach ( (array) get_object_taxonomies( $post->post_type, 'object' ) as $tax ) {
-			$tt_ids = wp_get_object_terms( $post->ID, $tax->name, [ 'fields' => 'tt_ids'] );
+			$tt_ids = wp_get_object_terms( $post->ID, $tax->name, array( 'fields' => 'tt_ids' ) );
 			//respect if a taxonomy has a callback override
 			if ( !empty( $tax->update_count_callback ) ) {
 				call_user_func( $tax->update_count_callback, $tt_ids, $tax->name );
@@ -58,7 +58,7 @@ class LTCU_Plugin {
 
 		//for non-attachments, let's check if there are any attachment children with inherited post status -- if so those will need to be re-counted
 		if ( $post->post_type !== 'attachment' ) {
-			$attachments = new WP_Query( [ 'post_type' => 'attachment', 'post_parent' => $post->ID, 'post_status' => 'inherit' ] );
+			$attachments = new WP_Query( array( 'post_type' => 'attachment', 'post_parent' => $post->ID, 'post_status' => 'inherit' ) );
 			if ( $attachments->have_posts() ) {
 				foreach ( $attachments->posts as $post ) {
 					$this->quick_update_terms_count( $new, $old, $post );
