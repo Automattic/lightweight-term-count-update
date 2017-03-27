@@ -14,6 +14,9 @@
 
 class LTCU_Plugin {
 
+	// post stati which should be counted in term post counting.  Normally at least publish
+	public $counted_stati = array( 'publish' );		
+
 	public function __construct() {
 		add_action( 'init', array( $this, 'init' ), 10, 0 );
 	}
@@ -21,15 +24,18 @@ class LTCU_Plugin {
 	public function init() {
 		remove_action( 'transition_post_status', '_update_term_count_on_transition_post_status' );
 		add_action( 'transition_post_status', array( $this, 'quick_update_terms_count' ), 10, 3 );
+		$this->counted_stati = apply_filters( 'LTCU_counted_stati',  $this->counted_stati );
 	}
 
 	public function quick_update_terms_count( $new, $old, $post ) {
 		global $wpdb;
 
-		if ( 'publish' === $new && 'publish' !== $old ) {
+		$transition_type = $this->transition_type( $new, $old );
+
+		if ( $transition_type === 'increment' ) {
 			$action = 'increment';
 			$update_query = "UPDATE {$wpdb->term_taxonomy} AS tt SET tt.count = tt.count + 1 WHERE tt.term_taxonomy_id = %d";
-		} elseif ( 'publish' === $old && 'publish' !== $new ) {
+		} elseif ( $transition_type === 'decrement' ) {
 			$action = 'decrement';
 			$update_query = "UPDATE {$wpdb->term_taxonomy} AS tt SET tt.count = tt.count - 1 WHERE tt.term_taxonomy_id = %d AND tt.count > 0";
 		}else{
@@ -48,6 +54,23 @@ class LTCU_Plugin {
 		}
 
 		do_action( 'LTCU_post_quick_update_terms_count', $action, $number_of_terms_updated, $post );
+	}
+
+	public function transition_type( $new, $old ) {
+		if ( !is_array( $this->counted_stati ) || !$this->counted_stati ) {
+			return false;
+		}
+
+		$new_is_counted = in_array( $new, $this->counted_stati, true );
+		$old_is_counted = in_array( $old, $this->counted_stati, true );
+
+		if ( $new_is_counted && !$old_is_counted ) {
+			return 'increment';
+		}elseif ( $old_is_counted && !$new_is_counted ){
+			return 'decrement';
+		}else{
+			return false;
+		}
 	}
 }
 
