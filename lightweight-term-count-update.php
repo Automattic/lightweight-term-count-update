@@ -32,28 +32,28 @@ class LTCU_Plugin {
 
 		$transition_type = $this->transition_type( $new, $old );
 
-		if ( $transition_type === 'increment' ) {
-			$action = 'increment';
-			$update_query = "UPDATE {$wpdb->term_taxonomy} AS tt SET tt.count = tt.count + 1 WHERE tt.term_taxonomy_id = %d";
-		} elseif ( $transition_type === 'decrement' ) {
-			$action = 'decrement';
-			$update_query = "UPDATE {$wpdb->term_taxonomy} AS tt SET tt.count = tt.count - 1 WHERE tt.term_taxonomy_id = %d AND tt.count > 0";
-		} else {
-			return;
+		if ( !$transition_type ) {
+			return false;
 		}
 
 		$number_of_terms_updated = 0;
 
 		foreach ( (array) get_object_taxonomies( $post->post_type ) as $tax ) {
 			$tt_ids = wp_get_object_terms( $post->ID, $tax, [ 'fields' => 'tt_ids'] );
-			foreach ( $tt_ids as $tt_id ) {
-				$full_update_query = $wpdb->prepare( $update_query, [ $tt_id ] );
-				$wpdb->query( $full_update_query );
-				$number_of_terms_updated++;
+			if ( $tt_ids ) {
+				$tt_ids_string = '(' . implode( ',', $tt_ids ) . ')';
+				if ( $transition_type === 'increment' ) {
+					//incrementing
+					$update_query = "UPDATE {$wpdb->term_taxonomy} AS tt SET tt.count = tt.count + 1 WHERE tt.term_taxonomy_id IN $tt_ids_string";
+				} else {
+					//decrementing
+					$update_query = "UPDATE {$wpdb->term_taxonomy} AS tt SET tt.count = tt.count - 1 WHERE tt.term_taxonomy_id IN $tt_ids_string AND tt.count > 0";
+				}
+				
+				$wpdb->query( $update_query );
+				$number_of_terms_updated += count( $tt_ids );
 			}
 		}
-
-		do_action( 'LTCU_post_quick_update_terms_count', $action, $number_of_terms_updated, $post );
 
 		//for non-attachments, let's check if there are any attachment children with inherited post status -- if so those will need to be re-counted
 		if ( $post->post_type !== 'attachment' && $transition_type !== false ) {
@@ -64,6 +64,8 @@ class LTCU_Plugin {
 				}
 			}
 		}
+
+		do_action( 'LTCU_post_quick_update_terms_count', $transition_type, $number_of_terms_updated, $post );
 	}
 
 	public function transition_type( $new, $old ) {
