@@ -56,7 +56,7 @@ class LTCU_Plugin {
 		}
 
 		//for non-attachments, let's check if there are any attachment children with inherited post status -- if so those will need to be re-counted
-		if ( $post->post_type !== 'attachment' && $transition_type !== false ) {
+		if ( $post->post_type !== 'attachment' ) {
 			$attachments = new WP_Query( [ 'post_type' => 'attachment', 'post_parent' => $post->ID, 'post_status' => 'inherit' ] );
 			if ( $attachments->have_posts() ) {
 				foreach ( $attachments->posts as $post ) {
