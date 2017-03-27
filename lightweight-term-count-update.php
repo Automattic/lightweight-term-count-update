@@ -64,8 +64,6 @@ class LTCU_Plugin {
 				}
 			}
 		}
-
-		do_action( 'LTCU_post_quick_update_terms_count', $transition_type, $number_of_terms_updated, $post );
 	}
 
 	public function transition_type( $new, $old ) {
