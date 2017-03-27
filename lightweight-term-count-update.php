@@ -52,6 +52,7 @@ class LTCU_Plugin {
 					$update_query = "UPDATE {$wpdb->term_taxonomy} AS tt SET tt.count = tt.count - 1 WHERE tt.term_taxonomy_id IN $tt_ids_string AND tt.count > 0";
 				}
 				$wpdb->query( $update_query );
+				clean_term_cache($tt_ids, '', false);
 			}
 		}
 
