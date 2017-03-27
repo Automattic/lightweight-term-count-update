@@ -54,6 +54,16 @@ class LTCU_Plugin {
 		}
 
 		do_action( 'LTCU_post_quick_update_terms_count', $action, $number_of_terms_updated, $post );
+
+		//for non-attachments, let's check if there are any attachment children with inherited post status -- if so those will need to be re-counted
+		if ( $post->post_type !== 'attachment' && $transition_type !== false ) {
+			$attachments = new WP_Query( [ 'post_type' => 'attachment', 'post_parent' => $post->ID, 'post_status' => 'inherit' ] );
+			if ( $attachments->have_posts() ) {
+				foreach ( $attachments->posts as $post ) {
+					$this->quick_update_terms_count( $new, $old, $post );
+				}
+			}
+		}
 	}
 
 	public function transition_type( $new, $old ) {
