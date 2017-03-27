@@ -36,8 +36,6 @@ class LTCU_Plugin {
 			return false;
 		}
 
-		$number_of_terms_updated = 0;
-
 		foreach ( (array) get_object_taxonomies( $post->post_type, 'object' ) as $tax ) {
 			$tt_ids = wp_get_object_terms( $post->ID, $tax->name, [ 'fields' => 'tt_ids'] );
 			//respect if a taxonomy has a callback override
@@ -53,9 +51,7 @@ class LTCU_Plugin {
 					//decrementing
 					$update_query = "UPDATE {$wpdb->term_taxonomy} AS tt SET tt.count = tt.count - 1 WHERE tt.term_taxonomy_id IN $tt_ids_string AND tt.count > 0";
 				}
-				
 				$wpdb->query( $update_query );
-				$number_of_terms_updated += count( $tt_ids );
 			}
 		}
 
