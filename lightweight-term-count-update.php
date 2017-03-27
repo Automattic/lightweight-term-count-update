@@ -38,7 +38,7 @@ class LTCU_Plugin {
 		} elseif ( $transition_type === 'decrement' ) {
 			$action = 'decrement';
 			$update_query = "UPDATE {$wpdb->term_taxonomy} AS tt SET tt.count = tt.count - 1 WHERE tt.term_taxonomy_id = %d AND tt.count > 0";
-		}else{
+		} else {
 			return;
 		}
 
