@@ -16,7 +16,7 @@ class SampleTest extends WP_UnitTestCase {
 	 */
 	function test_single_post_publish_with_a_single_category() {
 		
-		// create Test Category
+		// Create Test Category.
 		$testcat = self::factory()->category->create_and_get(
 			array(
 				'slug' => 'mytestcat',
