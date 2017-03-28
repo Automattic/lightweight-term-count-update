@@ -278,7 +278,7 @@ class TermCountingTest extends WP_UnitTestCase {
 
 		$category = get_term( $testcat->term_id, 'category' );
 
-		$this->assertEquals( $testcat->count, $category->count );
+		$this->assertEquals( $testcat->count + 1, $category->count );
 	}
 
 	/**
