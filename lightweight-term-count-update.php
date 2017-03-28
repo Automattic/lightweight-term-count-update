@@ -12,6 +12,9 @@
  * @package 		Lightweight_Term_Count_Update
  */
 
+/**
+ * Main plugin class.
+ */
 class LTCU_Plugin {
 
 	/**
@@ -126,7 +129,7 @@ class LTCU_Plugin {
 
 		// For non-attachments, let's check if there are any attachment children
 		// with inherited post status -- if so those will need to be re-counted.
-		if ( $post->post_type !== 'attachment' ) {
+		if ( 'attachment' !== $post->post_type ) {
 			$attachments = new WP_Query( array(
 				'post_type' => 'attachment',
 				'post_parent' => $post->ID,
@@ -178,14 +181,14 @@ class LTCU_Plugin {
 					);
 					$tt_ids_string = '(' . implode( ',', $tt_ids ) . ')';
 
-					if ( $transition_type === 'increment' ) {
-						// Incrementing
+					if ( 'increment' === $transition_type ) {
+						// Incrementing.
 						$update_query = "UPDATE {$wpdb->term_taxonomy} AS tt SET tt.count = tt.count + 1 WHERE tt.term_taxonomy_id IN $tt_ids_string";
 					} else {
-						// Decrementing
+						// Decrementing.
 						$update_query = "UPDATE {$wpdb->term_taxonomy} AS tt SET tt.count = tt.count - 1 WHERE tt.term_taxonomy_id IN $tt_ids_string AND tt.count > 0";
 					}
-					$wpdb->query( $update_query );
+					$wpdb->query( $update_query ); // WPCS: unprepared SQL ok.
 				}
 			}
 
@@ -196,8 +199,8 @@ class LTCU_Plugin {
 	/**
 	 * Determine if a term count should be incremented or decremented.
 	 *
-	 * @param  string      $new New post status.
-	 * @param  string      $old Old post status.
+	 * @param  string $new New post status.
+	 * @param  string $old Old post status.
 	 * @return string|bool 'increment', 'decrement', or false.
 	 */
 	public function transition_type( $new, $old ) {

@@ -6,4 +6,11 @@
 
 	<exclude-pattern>vendor/*</exclude-pattern>
 	<exclude-pattern>node_modules/*</exclude-pattern>
+
+	<rule ref="WordPress.Files.FileName.InvalidClassFileName">
+		<type>warning</type>
+	</rule>
+	<rule ref="WordPress.VIP.RestrictedFunctions.wp_get_post_terms_wp_get_object_terms">
+		<type>warning</type>
+	</rule>
 </ruleset>
