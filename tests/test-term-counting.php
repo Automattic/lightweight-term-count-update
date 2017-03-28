@@ -365,7 +365,7 @@ class TermCountingTest extends WP_UnitTestCase {
 						$wpdb->update( $wpdb->term_taxonomy, compact( 'count' ), array( 'term_taxonomy_id' => $term ) );
 						do_action( 'edited_term_taxonomy', $term, $taxonomy );
 					}
-				}
+				},
 			)
 		);
 		$testterm_array = wp_create_term( 'Test term', 'test-taxonomy' );
@@ -425,16 +425,16 @@ class TermCountingTest extends WP_UnitTestCase {
 			'post_category' => $testcats,
 		) );
 
-		wp_set_object_terms( $post_ids[0], wp_list_pluck($testcats, 'term_id' ), 'category' );
+		wp_set_object_terms( $post_ids[0], wp_list_pluck( $testcats, 'term_id' ), 'category' );
 
 		// Prepare the comparison.
 		$tt_ids = array();
-		foreach( $testcats as $term_id ) {
+		foreach ( $testcats as $term_id ) {
 			$term = get_term( $term_id, 'category' );
 			$tt_ids[] = $term->term_taxonomy_id;
 		}
 
-		$this->assertEquals( sort( $GLOBALS['ltcu_fired_action_tt_ids']) , sort( $tt_ids ) );
+		$this->assertEquals( sort( $GLOBALS['ltcu_fired_action_tt_ids'] ) , sort( $tt_ids ) );
 		$this->assertEquals( 'category', $GLOBALS['ltcu_fired_action_taxonomy'] );
 	}
 }
