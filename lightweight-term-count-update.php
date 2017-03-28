@@ -273,6 +273,7 @@ class LTCU_Plugin {
 if (
 	! ( defined( 'DOING_CRON' ) && DOING_CRON )
 	&& ! ( defined( 'WP_CLI' ) && WP_CLI )
+	&& ! ( defined( 'WP_IMPORTING' ) && WP_IMPORTING )
 ) {
 	add_action( 'init', array( 'LTCU_Plugin', 'instance' ) );
 }
