@@ -83,7 +83,9 @@ class LTCU_Plugin {
 	 */
 	public function added_term_relationship( $object_id, $tt_id, $taxonomy ) {
 		$post = get_post( $object_id );
-		$this->quick_update_terms_count( $post, (array) $tt_id, $taxonomy, 'increment' );
+		if ( in_array( $post->post_status, $this->counted_statuses, true ) ) {
+			$this->quick_update_terms_count( $post, (array) $tt_id, $taxonomy, 'increment' );
+		}
 	}
 
 	/**
@@ -150,6 +152,10 @@ class LTCU_Plugin {
 	public function quick_update_terms_count( $post, $tt_ids, $taxonomy, $transition_type ) {
 		global $wpdb;
 
+		if ( ! $transition_type ) {
+			return false;
+		}
+
 		$tax_obj = get_taxonomy( $taxonomy );
 		if ( $tax_obj ) {
 			$tt_ids = array_filter( array_map( 'intval', (array) $tt_ids ) );
@@ -158,7 +164,6 @@ class LTCU_Plugin {
 			if ( ! empty( $tax_obj->update_count_callback ) ) {
 				call_user_func( $tax_obj->update_count_callback, $tt_ids, $tax_obj->name );
 			} elseif ( ! empty( $tt_ids ) ) {
-				$tt_ids_string = '(' . implode( ',', $tt_ids ) . ')';
 				if ( ! isset( $this->counted_terms[ $post->ID ][ $taxonomy ][ $transition_type ] ) ) {
 					$this->counted_terms[ $post->ID ][ $taxonomy ][ $transition_type ] = array();
 				}
@@ -171,6 +176,7 @@ class LTCU_Plugin {
 						$this->counted_terms[ $post->ID ][ $taxonomy ][ $transition_type ],
 						$tt_ids
 					);
+					$tt_ids_string = '(' . implode( ',', $tt_ids ) . ')';
 
 					if ( $transition_type === 'increment' ) {
 						// Incrementing
