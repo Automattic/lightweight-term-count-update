@@ -141,9 +141,9 @@ class LTCU_Plugin {
 	 * When a post transitions, increment or decrement term counts as
 	 * appropriate.
 	 *
-	 * @param  string   $new_status New post status.
-	 * @param  string   $old_status Old post status.
-	 * @param  object   $post       {
+	 * @param  string $new_status New post status.
+	 * @param  string $old_status Old post status.
+	 * @param  object $post       {
 	 *     Post being transitioned. This not always a \WP_Post.
 	 *
 	 *     @type int    $ID        Post ID.

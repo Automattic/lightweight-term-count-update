@@ -13,4 +13,9 @@
 	<rule ref="WordPress.VIP.RestrictedFunctions.wp_get_post_terms_wp_get_object_terms">
 		<type>warning</type>
 	</rule>
+
+	<!-- We need to allow this to query all attachments. -->
+	<rule ref="WordPress.VIP.PostsPerPage.posts_per_page_posts_per_page">
+		<type>warning</type>
+	</rule>
 </ruleset>
