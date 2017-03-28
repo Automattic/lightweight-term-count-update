@@ -220,4 +220,11 @@ class LTCU_Plugin {
 		}
 	}
 }
-add_action( 'init', array( 'LTCU_Plugin', 'instance' ) );
+
+// Only run this plugin if we're not running a cron task or wp-cli task.
+if (
+	! ( defined( 'DOING_CRON' ) && DOING_CRON )
+	&& ! ( defined( 'WP_CLI' ) && WP_CLI )
+) {
+	add_action( 'init', array( 'LTCU_Plugin', 'instance' ) );
+}
