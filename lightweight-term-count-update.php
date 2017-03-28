@@ -71,6 +71,13 @@ class LTCU_Plugin {
 		wp_defer_term_counting( true );
 		remove_action( 'transition_post_status', '_update_term_count_on_transition_post_status' );
 
+		/**
+		 * Filter the statuses that should be counted, to allow for custom post
+		 * statuses that are otherwise equivalent to 'publish'.
+		 *
+		 * @param array $counted_statuses The statuses that should be counted.
+		 *                                Defaults to ['publish'].
+		 */
 		$this->counted_statuses = apply_filters( 'ltcu_counted_statuses', $this->counted_statuses );
 		add_action( 'transition_post_status', array( $this, 'transition_post_status' ), 10, 3 );
 		add_action( 'added_term_relationship', array( $this, 'added_term_relationship' ), 10, 3 );
@@ -80,27 +87,54 @@ class LTCU_Plugin {
 	/**
 	 * When a term relationship is added, increment the term count.
 	 *
+	 * @see {LTCU_Plugin::handle_term_relationship_change()}
+	 *
 	 * @param int    $object_id Object ID.
 	 * @param int    $tt_id     Single term taxonomy ID.
 	 * @param string $taxonomy  Taxonomy slug.
 	 */
 	public function added_term_relationship( $object_id, $tt_id, $taxonomy ) {
-		$post = get_post( $object_id );
-		if ( in_array( $post->post_status, $this->counted_statuses, true ) ) {
-			$this->quick_update_terms_count( $post, (array) $tt_id, $taxonomy, 'increment' );
-		}
+		$this->handle_term_relationship_change( $object_id, (array) $tt_id, $taxonomy, 'increment' );
 	}
 
 	/**
 	 * When a term relationship is deleted, decrement the term count.
+	 *
+	 * @see {LTCU_Plugin::handle_term_relationship_change()}
 	 *
 	 * @param int    $object_id Object ID.
 	 * @param array  $tt_ids    Array of term taxonomy IDs.
 	 * @param string $taxonomy  Taxonomy slug.
 	 */
 	public function deleted_term_relationships( $object_id, $tt_ids, $taxonomy ) {
+		$this->handle_term_relationship_change( $object_id, $tt_ids, $taxonomy, 'decrement' );
+	}
+
+	/**
+	 * Update term counts when term relationships are added or deleted.
+	 *
+	 * @see {LTCU_Plugin::added_term_relationship()}
+	 * @see {LTCU_Plugin::deleted_term_relationships()}
+	 *
+	 * @param int    $object_id       Object ID.
+	 * @param array  $tt_ids          Array of term taxonomy IDs.
+	 * @param string $taxonomy        Taxonomy slug.
+	 * @param string $transition_type Transition type (increment or decrement).
+	 */
+	protected function handle_term_relationship_change( $object_id, $tt_ids, $taxonomy, $transition_type ) {
 		$post = get_post( $object_id );
-		$this->quick_update_terms_count( $post, $tt_ids, $taxonomy, 'decrement' );
+
+		if ( ! $post || ! is_object_in_taxonomy( $post->post_type, $taxonomy ) ) {
+			// If this object isn't a post, we can jump right into counting it.
+			$this->quick_update_terms_count( $object_id, $tt_ids, $taxonomy, $transition_type );
+		} elseif ( in_array( get_post_status( $post ), $this->counted_statuses, true ) ) {
+			// If this is a post, we only count it if it's in a counted status.
+			// If the status changed, that will be caught by
+			// `LTCU_Plugin::transition_post_status()`. Also note that we used
+			// `get_post_status()` above because that checks the parent status
+			// if the status is inherit.
+			$this->quick_update_terms_count( $object_id, $tt_ids, $taxonomy, $transition_type );
+		}
 	}
 
 	/**
@@ -109,7 +143,12 @@ class LTCU_Plugin {
 	 *
 	 * @param  string   $new_status New post status.
 	 * @param  string   $old_status Old post status.
-	 * @param  \WP_Post $post       Post being transitioned.
+	 * @param  object   $post       {
+	 *     Post being transitioned. This not always a \WP_Post.
+	 *
+	 *     @type int    $ID        Post ID.
+	 *     @type string $post_type Post type.
+	 * }
 	 */
 	public function transition_post_status( $new_status, $old_status, $post ) {
 		foreach ( (array) get_object_taxonomies( $post->post_type ) as $taxonomy ) {
@@ -119,7 +158,7 @@ class LTCU_Plugin {
 
 			if ( ! empty( $tt_ids ) && ! is_wp_error( $tt_ids ) ) {
 				$this->quick_update_terms_count(
-					$post,
+					$post->ID,
 					$tt_ids,
 					$taxonomy,
 					$this->transition_type( $new_status, $old_status )
@@ -131,14 +170,23 @@ class LTCU_Plugin {
 		// with inherited post status -- if so those will need to be re-counted.
 		if ( 'attachment' !== $post->post_type ) {
 			$attachments = new WP_Query( array(
-				'post_type' => 'attachment',
-				'post_parent' => $post->ID,
-				'post_status' => 'inherit',
+				'post_type'           => 'attachment',
+				'post_parent'         => $post->ID,
+				'post_status'         => 'inherit',
+				'ignore_sticky_posts' => true,
+				'no_found_rows'       => true,
+				'posts_per_page'      => -1,
+				'fields'              => 'ids',
+				'orderby'             => 'ID',
+				'order'               => 'ASC',
 			) );
 
 			if ( $attachments->have_posts() ) {
-				foreach ( $attachments->posts as $post ) {
-					$this->transition_post_status( $new_status, $old_status, $post );
+				foreach ( $attachments->posts as $attachment_id ) {
+					$this->transition_post_status( $new_status, $old_status, (object) array(
+						'ID' => $attachment_id,
+						'post_type' => 'attachment',
+					) );
 				}
 			}
 		}
@@ -147,12 +195,12 @@ class LTCU_Plugin {
 	/**
 	 * Update term counts using a very light SQL query.
 	 *
-	 * @param  \WP_Post $post            Post with the term relationship.
-	 * @param  array    $tt_ids          Term taxonomy IDs.
-	 * @param  string   $taxonomy        Taxonomy slug.
-	 * @param  string   $transition_type 'increment' or 'decrement'.
+	 * @param  int    $object_id       Object ID with the term relationship.
+	 * @param  array  $tt_ids          Term taxonomy IDs.
+	 * @param  string $taxonomy        Taxonomy slug.
+	 * @param  string $transition_type 'increment' or 'decrement'.
 	 */
-	public function quick_update_terms_count( $post, $tt_ids, $taxonomy, $transition_type ) {
+	public function quick_update_terms_count( $object_id, $tt_ids, $taxonomy, $transition_type ) {
 		global $wpdb;
 
 		if ( ! $transition_type ) {
@@ -167,16 +215,16 @@ class LTCU_Plugin {
 			if ( ! empty( $tax_obj->update_count_callback ) ) {
 				call_user_func( $tax_obj->update_count_callback, $tt_ids, $tax_obj->name );
 			} elseif ( ! empty( $tt_ids ) ) {
-				if ( ! isset( $this->counted_terms[ $post->ID ][ $taxonomy ][ $transition_type ] ) ) {
-					$this->counted_terms[ $post->ID ][ $taxonomy ][ $transition_type ] = array();
+				if ( ! isset( $this->counted_terms[ $object_id ][ $taxonomy ][ $transition_type ] ) ) {
+					$this->counted_terms[ $object_id ][ $taxonomy ][ $transition_type ] = array();
 				}
 
 				// Ensure that these terms haven't already been counted.
-				$tt_ids = array_diff( $tt_ids, $this->counted_terms[ $post->ID ][ $taxonomy ][ $transition_type ] );
+				$tt_ids = array_diff( $tt_ids, $this->counted_terms[ $object_id ][ $taxonomy ][ $transition_type ] );
 
 				if ( ! empty( $tt_ids ) ) {
-					$this->counted_terms[ $post->ID ][ $taxonomy ][ $transition_type ] = array_merge(
-						$this->counted_terms[ $post->ID ][ $taxonomy ][ $transition_type ],
+					$this->counted_terms[ $object_id ][ $taxonomy ][ $transition_type ] = array_merge(
+						$this->counted_terms[ $object_id ][ $taxonomy ][ $transition_type ],
 						$tt_ids
 					);
 					$tt_ids_string = '(' . implode( ',', $tt_ids ) . ')';
