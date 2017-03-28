@@ -237,20 +237,20 @@ class LTCU_Plugin {
 						$update_query = "UPDATE {$wpdb->term_taxonomy} AS tt SET tt.count = tt.count - 1 WHERE tt.term_taxonomy_id IN $tt_ids_string AND tt.count > 0";
 					}
 
-					foreach( $tt_ids as $tt_id ) {
+					foreach ( $tt_ids as $tt_id ) {
 						/** This action is documented in wp-includes/taxonomy.php */
 						do_action( 'edit_term_taxonomy', $tt_id, $taxonomy );
 					}
 					$wpdb->query( $update_query ); // WPCS: unprepared SQL ok.
-					foreach( $tt_ids as $tt_id ) {
+					foreach ( $tt_ids as $tt_id ) {
 						/** This action is documented in wp-includes/taxonomy.php */
 						do_action( 'edited_term_taxonomy', $tt_id, $taxonomy );
 					}
 				}
-			}
+			} // End if().
 
 			clean_term_cache( $tt_ids, $taxonomy, false );
-		}
+		} // End if().
 	}
 
 	/**
