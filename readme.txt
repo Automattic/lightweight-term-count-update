@@ -1,7 +1,7 @@
 === Cronify Term Count Update ===
-Contributors: Automattic
+Contributors: Automattic, alleyinteractive
 Tags: performance, post-save
-Requires at least: 3.7
+Requires at least: 4.7
 Tested up to: 4.7.3
 Stable tag: 0.1.0
 License: GPLv2 or later
