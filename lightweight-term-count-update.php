@@ -32,20 +32,38 @@ class LTCU_Plugin {
 	public $counted_terms = array();
 
 	/**
-	 * Build an instance of the class. Helper to allow the class to be
-	 * instantiated via a hook.
+	 * Store the singleton instance.
 	 *
-	 * @return \LTCU_Plugin
+	 * @var My_Singleton
 	 */
-	public static function get_instance() {
-		return new LTCU_Plugin;
+	private static $instance;
+
+	/**
+	 * Build the object.
+	 *
+	 * @access private
+	 */
+	private function __construct() {
+		/* Don't do anything, needs to be initialized via instance() method */
 	}
 
-	public function __construct() {
-		$this->init();
+	/**
+	 * Get the Singleton instance.
+
+	 * @return My_Singleton
+	 */
+	public static function instance() {
+		if ( ! isset( self::$instance ) ) {
+			self::$instance = new static;
+			self::$instance->setup();
+		}
+		return self::$instance;
 	}
 
-	public function init() {
+	/**
+	 * Setup the singleton.
+	 */
+	public function setup() {
 		// Prevent core from counting terms.
 		wp_defer_term_counting( true );
 		remove_action( 'transition_post_status', '_update_term_count_on_transition_post_status' );
@@ -193,4 +211,4 @@ class LTCU_Plugin {
 		}
 	}
 }
-add_action( 'init', array( 'LTCU_Plugin', 'get_instance' ) );
+add_action( 'init', array( 'LTCU_Plugin', 'instance' ) );
