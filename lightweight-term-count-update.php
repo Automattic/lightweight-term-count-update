@@ -117,7 +117,7 @@ class LTCU_Plugin {
 				'fields' => 'tt_ids',
 			) );
 
-			if ( ! empty( $tt_ids ) ) {
+			if ( ! empty( $tt_ids ) && ! is_wp_error( $tt_ids ) ) {
 				$this->quick_update_terms_count(
 					$post,
 					$tt_ids,
