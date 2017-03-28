@@ -14,8 +14,14 @@
 
 class LTCU_Plugin {
 
-	// post stati which should be counted in term post counting.  Normally at least publish
-	public $counted_stati = array( 'publish' );
+	/**
+	 * Post statuses which should be counted in term post counting. By default
+	 * this is [ 'publish' ], but it can be altered via the
+	 * `ltcu_counted_statuses` filter.
+	 *
+	 * @var array
+	 */
+	public $counted_statuses = array( 'publish' );
 
 	/**
 	 * Build an instance of the class. Helper to allow the class to be
@@ -23,7 +29,6 @@ class LTCU_Plugin {
 	 *
 	 * @return \LTCU_Plugin
 	 */
-		add_action( 'transition_post_status', array( $this, 'quick_update_terms_count' ), 10, 3 );
 	public static function get_instance() {
 		return new LTCU_Plugin;
 	}
@@ -34,7 +39,7 @@ class LTCU_Plugin {
 
 	public function init() {
 		remove_action( 'transition_post_status', '_update_term_count_on_transition_post_status' );
-		$this->counted_stati = apply_filters( 'ltcu_counted_stati', $this->counted_stati );
+		$this->counted_statuses = apply_filters( 'ltcu_counted_statuses', $this->counted_statuses );
 	}
 
 	public function quick_update_terms_count( $new, $old, $post ) {
@@ -89,12 +94,12 @@ class LTCU_Plugin {
 	}
 
 	public function transition_type( $new, $old ) {
-		if ( ! is_array( $this->counted_stati ) || ! $this->counted_stati ) {
+		if ( ! is_array( $this->counted_statuses ) || ! $this->counted_statuses ) {
 			return false;
 		}
 
-		$new_is_counted = in_array( $new, $this->counted_stati, true );
-		$old_is_counted = in_array( $old, $this->counted_stati, true );
+		$new_is_counted = in_array( $new, $this->counted_statuses, true );
+		$old_is_counted = in_array( $old, $this->counted_statuses, true );
 
 		if ( $new_is_counted && ! $old_is_counted ) {
 			return 'increment';
