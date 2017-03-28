@@ -1,5 +1,5 @@
 === Cronify Term Count Update ===
-Contributors: Automattic
+Contributors: Automattic, alleyinteractive
 Tags: performance, post-save
 Requires at least: 3.7
 Tested up to: 4.7.3
