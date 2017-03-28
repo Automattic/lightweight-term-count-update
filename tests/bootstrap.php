@@ -2,7 +2,7 @@
 /**
  * PHPUnit bootstrap file
  *
- * @package Cronify_Term_Count_Update
+ * @package Lightweight_Term_Count_Update
  */
 
 $_tests_dir = getenv( 'WP_TESTS_DIR' );
