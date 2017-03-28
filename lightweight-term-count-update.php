@@ -24,7 +24,7 @@ class LTCU_Plugin {
 	public function init() {
 		remove_action( 'transition_post_status', '_update_term_count_on_transition_post_status' );
 		add_action( 'transition_post_status', array( $this, 'quick_update_terms_count' ), 10, 3 );
-		$this->counted_stati = apply_filters( 'LTCU_counted_stati',  $this->counted_stati );
+		$this->counted_stati = apply_filters( 'ltcu_counted_stati', $this->counted_stati );
 	}
 
 	public function quick_update_terms_count( $new, $old, $post ) {
@@ -32,35 +32,44 @@ class LTCU_Plugin {
 
 		$transition_type = $this->transition_type( $new, $old );
 
-		if ( !$transition_type ) {
+		if ( ! $transition_type ) {
 			return false;
 		}
 
 		foreach ( (array) get_object_taxonomies( $post->post_type, 'object' ) as $tax ) {
-			$tt_ids = wp_get_object_terms( $post->ID, $tax->name, array( 'fields' => 'tt_ids' ) );
+			$tt_ids = wp_get_object_terms( $post->ID, $tax->name, array(
+				'fields' => 'tt_ids',
+			) );
+
 			if ( is_array( $tt_ids ) ) {
 				$tt_ids = array_map( 'intval', $tt_ids );
-				//respect if a taxonomy has a callback override
-				if ( !empty( $tax->update_count_callback ) ) {
+				// Respect if a taxonomy has a callback override.
+				if ( ! empty( $tax->update_count_callback ) ) {
 					call_user_func( $tax->update_count_callback, $tt_ids, $tax->name );
 				} elseif ( $tt_ids ) {
 					$tt_ids_string = '(' . implode( ',', $tt_ids ) . ')';
 					if ( $transition_type === 'increment' ) {
-						//incrementing
+						// Incrementing
 						$update_query = "UPDATE {$wpdb->term_taxonomy} AS tt SET tt.count = tt.count + 1 WHERE tt.term_taxonomy_id IN $tt_ids_string";
 					} else {
-						//decrementing
+						// Decrementing
 						$update_query = "UPDATE {$wpdb->term_taxonomy} AS tt SET tt.count = tt.count - 1 WHERE tt.term_taxonomy_id IN $tt_ids_string AND tt.count > 0";
 					}
 					$wpdb->query( $update_query );
 				}
-				clean_term_cache($tt_ids, '', false);
+				clean_term_cache( $tt_ids, '', false );
 			}
 		}
 
-		//for non-attachments, let's check if there are any attachment children with inherited post status -- if so those will need to be re-counted
+		// For non-attachments, let's check if there are any attachment children
+		// with inherited post status -- if so those will need to be re-counted.
 		if ( $post->post_type !== 'attachment' ) {
-			$attachments = new WP_Query( array( 'post_type' => 'attachment', 'post_parent' => $post->ID, 'post_status' => 'inherit' ) );
+			$attachments = new WP_Query( array(
+				'post_type' => 'attachment',
+				'post_parent' => $post->ID,
+				'post_status' => 'inherit',
+			) );
+
 			if ( $attachments->have_posts() ) {
 				foreach ( $attachments->posts as $post ) {
 					$this->quick_update_terms_count( $new, $old, $post );
@@ -70,18 +79,18 @@ class LTCU_Plugin {
 	}
 
 	public function transition_type( $new, $old ) {
-		if ( !is_array( $this->counted_stati ) || !$this->counted_stati ) {
+		if ( ! is_array( $this->counted_stati ) || ! $this->counted_stati ) {
 			return false;
 		}
 
 		$new_is_counted = in_array( $new, $this->counted_stati, true );
 		$old_is_counted = in_array( $old, $this->counted_stati, true );
 
-		if ( $new_is_counted && !$old_is_counted ) {
+		if ( $new_is_counted && ! $old_is_counted ) {
 			return 'increment';
-		}elseif ( $old_is_counted && !$new_is_counted ){
+		} elseif ( $old_is_counted && ! $new_is_counted ) {
 			return 'decrement';
-		}else{
+		} else {
 			return false;
 		}
 	}
