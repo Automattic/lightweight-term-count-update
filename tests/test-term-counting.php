@@ -258,7 +258,12 @@ class TermCountingTest extends WP_UnitTestCase {
 
 	/**
 	 * Categories w/o parent have, by default, post_status set by inherit
-	 * and WordPress thus do not reflect them in category counts
+	 * and WordPress does not currently reflect them in category counts
+	 * {@see https://core.trac.wordpress.org/ticket/22558} and
+	 * {@see https://core.trac.wordpress.org/ticket/23530}. However, they should
+	 * be included and so this plugin does count them. If this behavior is left
+	 * as a "won't fix" in core, this plugin might change how it works to remain
+	 * inline with core.
 	 */
 	function test_non_attached_attachments_categories() {
 		// Create a test category.
