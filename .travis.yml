@@ -55,4 +55,4 @@ script:
   - if [[ "$PHP_LINT" == "1" ]]; then find . -type "f" -iname "*.php" | xargs -L "1" php -l; fi
   - if [[ "$WP_PHPCS" == "1" ]]; then phpcs -n --standard=phpcs.ruleset.xml lightweight-term-count-update.php; fi
   - phpunit
-  - WP_MULTISITE=1; phpunit
+  - phpunit -c multisite.xml
