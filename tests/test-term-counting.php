@@ -254,8 +254,6 @@ class TermCountingTest extends WP_UnitTestCase {
 		$category = get_term( $testcat->term_id, 'category' );
 
 		$this->assertEquals( $testcat->count + 1, $category->count );
-
-		unregister_taxonomy_for_object_type( 'category', 'attachment' );
 	}
 
 	/**
@@ -281,8 +279,6 @@ class TermCountingTest extends WP_UnitTestCase {
 		$category = get_term( $testcat->term_id, 'category' );
 
 		$this->assertEquals( $testcat->count, $category->count );
-
-		unregister_taxonomy_for_object_type( 'category', 'attachment' );
 	}
 
 	/**
@@ -317,8 +313,6 @@ class TermCountingTest extends WP_UnitTestCase {
 		$category = get_term( $testcat->term_id, 'category' );
 
 		$this->assertEquals( $testcat->count + 12, $category->count );
-
-		unregister_taxonomy_for_object_type( 'category', 'attachment' );
 	}
 
 	/**
@@ -344,8 +338,6 @@ class TermCountingTest extends WP_UnitTestCase {
 		$term = get_term( $testterm->term_id, 'profession' );
 
 		$this->assertEquals( $testterm->count + 1, $term->count );
-
-		unregister_taxonomy( 'profession' );
 	}
 
 	/**
@@ -388,7 +380,5 @@ class TermCountingTest extends WP_UnitTestCase {
 		$term = get_term( $testterm->term_id, 'test-taxonomy' );
 
 		$this->assertEquals( 10, $term->count );
-
-		unregister_taxonomy( 'test-taxonomy' );
 	}
 }
