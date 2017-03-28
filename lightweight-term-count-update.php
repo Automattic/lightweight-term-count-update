@@ -15,15 +15,25 @@
 class LTCU_Plugin {
 
 	// post stati which should be counted in term post counting.  Normally at least publish
-	public $counted_stati = array( 'publish' );		
+	public $counted_stati = array( 'publish' );
+
+	/**
+	 * Build an instance of the class. Helper to allow the class to be
+	 * instantiated via a hook.
+	 *
+	 * @return \LTCU_Plugin
+	 */
+		add_action( 'transition_post_status', array( $this, 'quick_update_terms_count' ), 10, 3 );
+	public static function get_instance() {
+		return new LTCU_Plugin;
+	}
 
 	public function __construct() {
-		add_action( 'init', array( $this, 'init' ), 10, 0 );
+		$this->init();
 	}
 
 	public function init() {
 		remove_action( 'transition_post_status', '_update_term_count_on_transition_post_status' );
-		add_action( 'transition_post_status', array( $this, 'quick_update_terms_count' ), 10, 3 );
 		$this->counted_stati = apply_filters( 'ltcu_counted_stati', $this->counted_stati );
 	}
 
@@ -95,5 +105,4 @@ class LTCU_Plugin {
 		}
 	}
 }
-
-$ltcu_plugin = new LTCU_Plugin();
+add_action( 'init', array( 'LTCU_Plugin', 'get_instance' ) );
