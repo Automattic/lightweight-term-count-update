@@ -386,4 +386,55 @@ class TermCountingTest extends WP_UnitTestCase {
 
 		$this->assertEquals( 10, $term->count );
 	}
+
+
+	/**
+	 * Data provider to test actions fired on update.
+	 *
+	 * @return array
+	 */
+	public function actions_data() {
+		return array(
+			array( 'edit_term_taxonomy' ),
+			array( 'edited_term_taxonomy' ),
+		);
+	}
+
+	/**
+	 * @dataProvider actions_data
+	 * @param  string $action Action to be fired.
+	 */
+	function test_actins_being_fired( $action ) {
+		// Create a test category.
+		$testcats = self::factory()->category->create_many( 3 );
+
+		// Reset the counted terms cache to mimic pre-existing posts.
+		LTCU_Plugin::instance()->counted_terms = array();
+
+		// Hook test action.
+		$GLOBALS['ltcu_fired_action_tt_ids'] = array();
+		$GLOBALS['ltcu_fired_action_taxonomy'] = '';
+		add_action( $action, function( $tt_id, $taxonomy ) {
+			$GLOBALS['ltcu_fired_action_tt_ids'][] = $tt_id;
+			$GLOBALS['ltcu_fired_action_taxonomy'] = $taxonomy;
+		}, 10, 2 );
+
+		$post_ids = self::factory()->post->create( array(
+			'post_type' => 'post',
+			'post_status' => 'publish',
+			'post_category' => $testcats,
+		) );
+
+		wp_set_object_terms( $post_ids[0], wp_list_pluck($testcats, 'term_id' ), 'category' );
+
+		// Prepare the comparison.
+		$tt_ids = array();
+		foreach( $testcats as $term_id ) {
+			$term = get_term( $term_id, 'category' );
+			$tt_ids[] = $term->term_taxonomy_id;
+		}
+
+		$this->assertEquals( sort( $GLOBALS['ltcu_fired_action_tt_ids']) , sort( $tt_ids ) );
+		$this->assertEquals( 'category', $GLOBALS['ltcu_fired_action_taxonomy'] );
+	}
 }
