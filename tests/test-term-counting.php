@@ -439,9 +439,8 @@ class TermCountingTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test that the first draft of a post gets terms set properly. This is
-	 * primarily aimed at external object caches, because the cache only gets
-	 * cleared when terms get set after they're counted.
+	 * Test that the first draft of a post gets terms set properly and the term
+	 * cache is cleared.
 	 *
 	 * {@see https://github.com/Automattic/lightweight-term-count-update/pull/8}
 	 */
