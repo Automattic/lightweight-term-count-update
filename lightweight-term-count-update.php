@@ -229,7 +229,7 @@ class LTCU_Plugin {
 		if ( 'attachment' !== $post->post_type ) {
 
 			if ( count( $this->attachments ) > 0 ) {
-				foreach ( $attachments->posts as $attachment_id ) {
+				foreach ( $this->attachments as $attachment_id ) {
 					$this->transition_post_status( $new_status, $old_status, (object) array(
 						'ID' => $attachment_id,
 						'post_type' => 'attachment',
