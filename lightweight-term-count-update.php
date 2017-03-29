@@ -134,6 +134,8 @@ class LTCU_Plugin {
 			// `get_post_status()` above because that checks the parent status
 			// if the status is inherit.
 			$this->quick_update_terms_count( $object_id, $tt_ids, $taxonomy, $transition_type );
+		} else {
+			clean_term_cache( $tt_ids, $taxonomy, false );
 		}
 	}
 
