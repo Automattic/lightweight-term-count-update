@@ -23,7 +23,7 @@ matrix:
     - php: 7.1
       env: WP_VERSION=latest PHP_LINT=1
     - php: 7.0
-      env: WP_VERSION=nightly
+      env: WP_VERSION=nightly WP_TRAVIS_OBJECT_CACHE=1
     - php: 'hhvm'
       env: WP_VERSION=nightly PHP_LINT=1
   fast_finish: true
@@ -31,6 +31,13 @@ matrix:
 cache:
   - composer
   - $HOME/.composer/cache
+
+before_install:
+    - |
+      if [[ "$WP_TRAVIS_OBJECT_CACHE" == "1" ]]; then
+        curl https://raw.githubusercontent.com/tollmanz/wordpress-pecl-memcached-object-cache/584392b56dc4adbe52bd2c7b86f875e23a3e5f75/object-cache.php > src/wp-content/object-cache.php
+        echo "extension = memcached.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+      fi
 
 before_script:
   - |
