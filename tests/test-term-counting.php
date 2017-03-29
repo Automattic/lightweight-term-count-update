@@ -437,4 +437,35 @@ class TermCountingTest extends WP_UnitTestCase {
 		$this->assertEquals( sort( $GLOBALS['ltcu_fired_action_tt_ids'] ) , sort( $tt_ids ) );
 		$this->assertEquals( 'category', $GLOBALS['ltcu_fired_action_taxonomy'] );
 	}
+
+	/**
+	 * Test that the first draft of a post gets terms set properly and the term
+	 * cache is cleared.
+	 *
+	 * {@see https://github.com/Automattic/lightweight-term-count-update/pull/8}
+	 */
+	function test_first_draft_save() {
+		// Create Test Category.
+		$testcat = $this->make_category();
+
+		// Create the blank post object to mimic the "Write" screen.
+		$post = get_default_post_to_edit( 'post', true );
+		$post_id = $post->ID;
+
+		// Save a draft of the post.
+		wp_update_post( array(
+			'ID' => $post_id,
+			'post_status' => 'draft',
+			'post_title' => 'some-post',
+			'post_type' => 'post',
+			'post_content' => 'some_content',
+			'post_category' => array( $testcat->term_id ),
+		) );
+
+		// Ensure that caches were cleared.
+		$terms = get_the_terms( $post_id, 'category' );
+
+		$this->assertTrue( is_array( $terms ) );
+		$this->assertSame( array( $testcat->term_id ), wp_list_pluck( $terms, 'term_id' ) );
+	}
 }
