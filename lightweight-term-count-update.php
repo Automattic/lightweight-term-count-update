@@ -35,6 +35,22 @@ class LTCU_Plugin {
 	public $counted_terms = array();
 
 	/**
+	 * This plugin does not always provide a clear advantage for posts with extremely high numbers of attachments.  Posts with more than this many attachments will fall back to normal term post counting with an optional override.  If set to -1, then no limit will be observerd and this plugin's method will always be used.
+	 *
+	 * @var int
+	 */
+	public $attachment_limit = 1000;
+
+	/**
+	 * An array of post IDs representing the attachments with inherited status that must be processed
+	 * 
+	 * @var array
+	 * 
+	 */
+
+	public $attachments = array();
+
+	/**
 	 * Store the singleton instance.
 	 *
 	 * @var My_Singleton
@@ -70,6 +86,13 @@ class LTCU_Plugin {
 		// Prevent core from counting terms.
 		wp_defer_term_counting( true );
 		remove_action( 'transition_post_status', '_update_term_count_on_transition_post_status' );
+		
+		/**
+		 * Change the attachment limit.  This is the maximum number of attachments a post may have while still being subject to this alternate counting method.
+		 *
+		 * @param int $attachment_limit the limit, a non-zero positive number or -1
+		 */
+		$this->attachment_limit = (int) apply_filters( 'ltcu_attachment_limit', $this->attachment_limit );
 
 		/**
 		 * Filter the statuses that should be counted, to allow for custom post
@@ -134,8 +157,6 @@ class LTCU_Plugin {
 			// `get_post_status()` above because that checks the parent status
 			// if the status is inherit.
 			$this->quick_update_terms_count( $object_id, $tt_ids, $taxonomy, $transition_type );
-		} else {
-			clean_term_cache( $tt_ids, $taxonomy, false );
 		}
 	}
 
@@ -153,6 +174,42 @@ class LTCU_Plugin {
 	 * }
 	 */
 	public function transition_post_status( $new_status, $old_status, $post ) {
+
+		// if we're not an attachment, check if there are any and respond accordingly
+		if ( 'attachment' !== $post->post_type ) {
+			
+			//query for one more attachment than the limit -- this avoids unnecessary no-limit queries here
+			$attachment_query_limit = ( $this->attachment_limit === -1 ) ? -1 : $this->attachment_limit + 1;
+			$attachments = new WP_Query( array(
+				'post_type'           => 'attachment',
+				'post_parent'         => $post->ID,
+				'post_status'         => 'inherit',
+				'ignore_sticky_posts' => true,
+				'no_found_rows'       => true,
+				'posts_per_page'      => $attachment_query_limit,
+				'fields'              => 'ids',
+				'orderby'             => 'ID',
+				'order'               => 'ASC',
+			) );
+
+			if ( -1 !== $this->attachment_limit && count( $attachments->posts ) > $this->attachment_limit ) {
+				//are there more attachments than the limit?
+				if ( has_action( 'ltcu_alternate_transition_post_status' ) ) {
+					// execute any alternate counting method for high-attachment edge cases
+					do_action( 'ltcu_alternate_transition_post_status', $new_status, $old_status, $post );
+				}else{
+					//fall back to the normal behavior for high-attachment posts
+					wp_defer_term_counting( false );
+					_update_term_count_on_transition_post_status( $new_status, $old_status, $post );
+				}
+				return;
+			}
+
+			// note: there are always the correct number of attachments here even though the limit was one higher  
+			$this->attachments = $attachments->posts;
+		}
+
+		// proceed with our shortcut
 		foreach ( (array) get_object_taxonomies( $post->post_type ) as $taxonomy ) {
 			$tt_ids = wp_get_object_terms( $post->ID, $taxonomy, array(
 				'fields' => 'tt_ids',
@@ -168,22 +225,10 @@ class LTCU_Plugin {
 			}
 		}
 
-		// For non-attachments, let's check if there are any attachment children
-		// with inherited post status -- if so those will need to be re-counted.
+		// process the attachments
 		if ( 'attachment' !== $post->post_type ) {
-			$attachments = new WP_Query( array(
-				'post_type'           => 'attachment',
-				'post_parent'         => $post->ID,
-				'post_status'         => 'inherit',
-				'ignore_sticky_posts' => true,
-				'no_found_rows'       => true,
-				'posts_per_page'      => -1,
-				'fields'              => 'ids',
-				'orderby'             => 'ID',
-				'order'               => 'ASC',
-			) );
 
-			if ( $attachments->have_posts() ) {
+			if ( count( $this->attachments ) > 0 ) {
 				foreach ( $attachments->posts as $attachment_id ) {
 					$this->transition_post_status( $new_status, $old_status, (object) array(
 						'ID' => $attachment_id,
