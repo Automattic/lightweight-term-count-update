@@ -39,7 +39,8 @@ before_script:
     fi
   - |
     if [[ "$WP_TRAVIS_OBJECT_CACHE" == "1" ]]; then
-      curl https://raw.githubusercontent.com/tollmanz/wordpress-pecl-memcached-object-cache/584392b56dc4adbe52bd2c7b86f875e23a3e5f75/object-cache.php > src/wp-content/object-cache.php
+      WP_CORE_DIR=${WP_CORE_DIR-/tmp/wordpress/}
+      curl https://raw.githubusercontent.com/tollmanz/wordpress-pecl-memcached-object-cache/584392b56dc4adbe52bd2c7b86f875e23a3e5f75/object-cache.php > $WP_CORE_DIR/wp-content/object-cache.php
       echo "extension = memcached.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
     fi
   - export PATH="$HOME/.composer/vendor/bin:$PATH"
