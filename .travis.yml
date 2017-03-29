@@ -23,7 +23,7 @@ matrix:
     - php: 7.1
       env: WP_VERSION=latest PHP_LINT=1
     - php: 7.0
-      env: WP_VERSION=nightly WP_TRAVIS_OBJECT_CACHE=1
+      env: WP_VERSION=nightly WP_TEST_OBJECT_CACHE=1
     - php: 'hhvm'
       env: WP_VERSION=nightly PHP_LINT=1
   fast_finish: true
@@ -38,9 +38,10 @@ before_script:
       bash bin/install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION
     fi
   - |
-    if [[ "$WP_TRAVIS_OBJECT_CACHE" == "1" ]]; then
+    if [[ "$WP_TEST_OBJECT_CACHE" == "1" ]]; then
       WP_CORE_DIR=${WP_CORE_DIR-/tmp/wordpress/}
       curl https://raw.githubusercontent.com/tollmanz/wordpress-pecl-memcached-object-cache/584392b56dc4adbe52bd2c7b86f875e23a3e5f75/object-cache.php > $WP_CORE_DIR/wp-content/object-cache.php
+      ls -la $WP_CORE_DIR/wp-content/
       echo "extension = memcached.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
     fi
   - export PATH="$HOME/.composer/vendor/bin:$PATH"

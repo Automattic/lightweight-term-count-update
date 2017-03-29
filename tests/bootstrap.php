@@ -21,5 +21,14 @@ function _manually_load_plugin() {
 }
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 
+// If we're intending to test with an external object cache and we aren't using
+// one, alert the user to the configuration error and exit.
+if ( getenv( 'WP_TEST_OBJECT_CACHE' ) ) {
+	if ( ! wp_using_ext_object_cache() ) {
+		echo "CONFIGURATION ERROR!\nWP_TEST_OBJECT_CACHE is set, but WordPress is not using an external object cache";
+		exit 1;
+	}
+}
+
 // Start up the WP testing environment.
 require $_tests_dir . '/includes/bootstrap.php';
