@@ -23,8 +23,10 @@ function _manually_load_plugin() {
 	// one, alert the user to the configuration error and exit.
 	if ( getenv( 'WP_TEST_OBJECT_CACHE' ) ) {
 		if ( ! wp_using_ext_object_cache() ) {
-			echo "CONFIGURATION ERROR!\nWP_TEST_OBJECT_CACHE is set, but WordPress is not using an external object cache";
+			echo "CONFIGURATION ERROR!\nWP_TEST_OBJECT_CACHE is set, but WordPress is not using an external object cache\n";
 			exit( 1 );
+		} else {
+			echo "Running tests with an external object cache...\n";
 		}
 	}
 }
