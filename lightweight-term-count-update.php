@@ -83,7 +83,6 @@ class LTCU_Plugin {
 		add_action( 'added_term_relationship', array( $this, 'added_term_relationship' ), 10, 3 );
 		add_action( 'deleted_term_relationships', array( $this, 'deleted_term_relationships' ), 10, 3 );
 
-	
 		 /**
 		  * Possibly recount posts for a term once it's been edited.
 		  */
@@ -287,14 +286,13 @@ class LTCU_Plugin {
 
 	/**
 	 * Force-recount posts for a term.  Do this only when the update originates from the edit term screen.
-	 * 
-	 * @param int $term_id
-	 * @param int $tt_id
-	 * @param string $taxonomy
-	 * 
-	 * @return bool false if the screen check fails, true otherwise 
+	 *
+	 * @param  int $term_id the term id
+	 * @param  int $tt_id the term taxonomy id
+	 * @param  string $taxonomy the taxonomy
+	 *
+	 * @return bool false if the screen check fails, true otherwise
 	 */
-
 	public function maybe_recount_posts_for_term( $term_id, $tt_id, $taxonomy ) {
 		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : '';
 		if ( 'WP_Screen' !== get_class( $screen ) ) {
