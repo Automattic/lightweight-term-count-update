@@ -287,9 +287,9 @@ class LTCU_Plugin {
 	/**
 	 * Force-recount posts for a term.  Do this only when the update originates from the edit term screen.
 	 *
-	 * @param  int  $term_id the term id.
-	 * @param  int  $tt_id the term taxonomy id.
-	 * @param  string  $taxonomy the taxonomy.
+	 * @param  int    $term_id the term id.
+	 * @param  int    $tt_id the term taxonomy id.
+	 * @param  string $taxonomy the taxonomy.
 	 *
 	 * @return bool false if the screen check fails, true otherwise
 	 */
