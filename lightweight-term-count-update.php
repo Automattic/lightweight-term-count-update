@@ -295,7 +295,7 @@ class LTCU_Plugin {
 	 */
 	public function maybe_recount_posts_for_term( $term_id, $tt_id, $taxonomy ) {
 		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : '';
-		if ( 'WP_Screen' !== get_class( $screen ) ) {
+		if ( !( $screen instanceof WP_Screen ) ) {
 			return false;
 		}
 		if ( "edit-$taxonomy" === $screen->id ) {
