@@ -317,6 +317,9 @@ class TermCountingTest extends WP_UnitTestCase {
 
 		$category = get_term( $testcat->term_id, 'category' );
 
+		// Confirm the lightweight method is being used
+		$this->assertEquals( wp_defer_term_counting(), true );
+
 		$this->assertEquals( $testcat->count + 12, $category->count );
 	}
 
@@ -468,4 +471,132 @@ class TermCountingTest extends WP_UnitTestCase {
 		$this->assertTrue( is_array( $terms ) );
 		$this->assertSame( array( $testcat->term_id ), wp_list_pluck( $terms, 'term_id' ) );
 	}
+
+	/**
+	 * Test that the attachment limit is honoured and original WP term counting used
+	 *
+	 * (@see https://github.com/Automattic/lightweight-term-count-update/issues/5)
+	 */
+	function test_attachment_limit_honoured() {
+		// Set the limit to a figure below the number of attachments
+		LTCU_Plugin::instance()->attachment_limit = 10;
+
+		// Create a test category.
+		$testcat = $this->make_category();
+
+		register_taxonomy_for_object_type( 'category', 'attachment' );
+
+		$post_id = self::factory()->post->create( array(
+			'post_type' => 'post',
+			'post_status' => 'draft',
+			'post_category' => array( $testcat->term_id ),
+		) );
+
+		self::factory()->attachment->create_many( 11, array(
+			'post_parent' => $post_id,
+			'post_category' => array( $testcat->term_id ),
+		) );
+
+		// Reset the counted terms cache to mimic pre-existing posts.
+		LTCU_Plugin::instance()->counted_terms = array();
+
+		wp_update_post( array(
+			'ID' => $post_id,
+			'post_status' => 'publish',
+		) );
+
+		// Confirm the original WP method is being used
+		$this->assertEquals( wp_defer_term_counting(), false );
+
+		$category = get_term( $testcat->term_id, 'category' );
+
+		$this->assertEquals( $testcat->count + 12, $category->count );
+		LTCU_Plugin::instance()->attachment_limit = 1000;
+	}
+
+	/**
+	 * Test that ltcu_alternate_transtion_post_status is not called when
+	 * attachment limit is not exceeded
+	 */
+	function test_ltcu_alternate_transtion_post_status_not_called() {
+
+
+		$mock = new MockAction();
+		$callback = array( $mock, 'action' );
+
+		add_action( 'ltcu_alternate_transition_post_status', $callback );
+
+		// Create a test category.
+		$testcat = $this->make_category();
+
+		register_taxonomy_for_object_type( 'category', 'attachment' );
+
+		$post_id = self::factory()->post->create( array(
+			'post_type' => 'post',
+			'post_status' => 'draft',
+			'post_category' => array( $testcat->term_id ),
+		) );
+
+		self::factory()->attachment->create_many( 11, array(
+			'post_parent' => $post_id,
+			'post_category' => array( $testcat->term_id ),
+		) );
+
+		// Reset the counted terms cache to mimic pre-existing posts.
+		LTCU_Plugin::instance()->counted_terms = array();
+
+		wp_update_post( array(
+			'ID' => $post_id,
+			'post_status' => 'publish',
+		) );
+
+		// Confirm the original WP method is being used
+		$this->assertEquals( 0, $mock->get_call_count() );
+
+	}
+
+	/**
+	 * Test that ltcu_alternate_transtion_post_status is called when
+	 * attachment limit exceeded
+	 */
+	function test_ltcu_alternate_transtion_post_status_called() {
+
+
+		$mock = new MockAction();
+		$callback = array( $mock, 'action' );
+
+		add_action( 'ltcu_alternate_transition_post_status', $callback );
+
+		// Set the limit to a figure below the number of attachments
+		LTCU_Plugin::instance()->attachment_limit = 10;
+
+		// Create a test category.
+		$testcat = $this->make_category();
+
+		register_taxonomy_for_object_type( 'category', 'attachment' );
+
+		$post_id = self::factory()->post->create( array(
+			'post_type' => 'post',
+			'post_status' => 'draft',
+			'post_category' => array( $testcat->term_id ),
+		) );
+
+		self::factory()->attachment->create_many( 11, array(
+			'post_parent' => $post_id,
+			'post_category' => array( $testcat->term_id ),
+		) );
+
+		// Reset the counted terms cache to mimic pre-existing posts.
+		LTCU_Plugin::instance()->counted_terms = array();
+
+		wp_update_post( array(
+			'ID' => $post_id,
+			'post_status' => 'publish',
+		) );
+
+		// Confirm the original WP method is being used
+		$this->assertEquals( 1, $mock->get_call_count() );
+
+	}
 }
+
