@@ -9,7 +9,7 @@
  * Domain Path:     /languages
  * Version:         0.1.0
  *
- * @package 		Lightweight_Term_Count_Update
+ * @package         Lightweight_Term_Count_Update
  */
 
 /**
@@ -57,7 +57,7 @@ class LTCU_Plugin {
 	 */
 	public static function instance() {
 		if ( ! isset( self::$instance ) ) {
-			self::$instance = new static;
+			self::$instance = new static();
 			self::$instance->setup();
 		}
 		return self::$instance;
@@ -230,10 +230,10 @@ class LTCU_Plugin {
 				$tt_ids = array_diff( $tt_ids, $this->counted_terms[ $object_id ][ $taxonomy ][ $transition_type ] );
 
 				if ( empty( $tt_ids ) ) {
-					//No term to process. So return.
+					// No term to process. So return.
 					return;
 				}
-				
+
 				$this->counted_terms[ $object_id ][ $taxonomy ][ $transition_type ] = array_merge(
 					$this->counted_terms[ $object_id ][ $taxonomy ][ $transition_type ],
 					$tt_ids
@@ -257,7 +257,6 @@ class LTCU_Plugin {
 					/** This action is documented in wp-includes/taxonomy.php */
 					do_action( 'edited_term_taxonomy', $tt_id, $taxonomy );
 				}
-
 			} // End if().
 
 			clean_term_cache( $tt_ids, $taxonomy, false );
