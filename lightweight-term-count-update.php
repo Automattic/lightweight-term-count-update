@@ -83,9 +83,9 @@ class LTCU_Plugin {
 		add_action( 'added_term_relationship', array( $this, 'added_term_relationship' ), 10, 3 );
 		add_action( 'deleted_term_relationships', array( $this, 'deleted_term_relationships' ), 10, 3 );
 
-		 /**
-		  * Possibly recount posts for a term once it's been edited.
-		  */
+		/**
+		 * Possibly recount posts for a term once it's been edited.
+		 */
 		add_action( 'edit_term', array( $this, 'maybe_recount_posts_for_term' ), 10, 3 );
 	}
 
