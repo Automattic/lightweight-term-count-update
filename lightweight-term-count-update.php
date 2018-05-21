@@ -9,7 +9,7 @@
  * Domain Path:     /languages
  * Version:         0.1.0
  *
- * @package 		Lightweight_Term_Count_Update
+ * @package         Lightweight_Term_Count_Update
  */
 
 /**
@@ -57,7 +57,7 @@ class LTCU_Plugin {
 	 */
 	public static function instance() {
 		if ( ! isset( self::$instance ) ) {
-			self::$instance = new static;
+			self::$instance = new static();
 			self::$instance->setup();
 		}
 		return self::$instance;
@@ -83,9 +83,9 @@ class LTCU_Plugin {
 		add_action( 'added_term_relationship', array( $this, 'added_term_relationship' ), 10, 3 );
 		add_action( 'deleted_term_relationships', array( $this, 'deleted_term_relationships' ), 10, 3 );
 
-		 /**
-		  * Possibly recount posts for a term once it's been edited.
-		  */
+		/**
+		 * Possibly recount posts for a term once it's been edited.
+		 */
 		add_action( 'edit_term', array( $this, 'maybe_recount_posts_for_term' ), 10, 3 );
 	}
 
@@ -229,30 +229,33 @@ class LTCU_Plugin {
 				// Ensure that these terms haven't already been counted.
 				$tt_ids = array_diff( $tt_ids, $this->counted_terms[ $object_id ][ $taxonomy ][ $transition_type ] );
 
-				if ( ! empty( $tt_ids ) ) {
-					$this->counted_terms[ $object_id ][ $taxonomy ][ $transition_type ] = array_merge(
-						$this->counted_terms[ $object_id ][ $taxonomy ][ $transition_type ],
-						$tt_ids
-					);
-					$tt_ids_string = '(' . implode( ',', $tt_ids ) . ')';
+				if ( empty( $tt_ids ) ) {
+					// No term to process. So return.
+					return;
+				}
 
-					if ( 'increment' === $transition_type ) {
-						// Incrementing.
-						$update_query = "UPDATE {$wpdb->term_taxonomy} AS tt SET tt.count = tt.count + 1 WHERE tt.term_taxonomy_id IN $tt_ids_string";
-					} else {
-						// Decrementing.
-						$update_query = "UPDATE {$wpdb->term_taxonomy} AS tt SET tt.count = tt.count - 1 WHERE tt.term_taxonomy_id IN $tt_ids_string AND tt.count > 0";
-					}
+				$this->counted_terms[ $object_id ][ $taxonomy ][ $transition_type ] = array_merge(
+					$this->counted_terms[ $object_id ][ $taxonomy ][ $transition_type ],
+					$tt_ids
+				);
+				$tt_ids_string = '(' . implode( ',', $tt_ids ) . ')';
 
-					foreach ( $tt_ids as $tt_id ) {
-						/** This action is documented in wp-includes/taxonomy.php */
-						do_action( 'edit_term_taxonomy', $tt_id, $taxonomy );
-					}
-					$wpdb->query( $update_query ); // WPCS: unprepared SQL ok.
-					foreach ( $tt_ids as $tt_id ) {
-						/** This action is documented in wp-includes/taxonomy.php */
-						do_action( 'edited_term_taxonomy', $tt_id, $taxonomy );
-					}
+				if ( 'increment' === $transition_type ) {
+					// Incrementing.
+					$update_query = "UPDATE {$wpdb->term_taxonomy} AS tt SET tt.count = tt.count + 1 WHERE tt.term_taxonomy_id IN $tt_ids_string";
+				} else {
+					// Decrementing.
+					$update_query = "UPDATE {$wpdb->term_taxonomy} AS tt SET tt.count = tt.count - 1 WHERE tt.term_taxonomy_id IN $tt_ids_string AND tt.count > 0";
+				}
+
+				foreach ( $tt_ids as $tt_id ) {
+					/** This action is documented in wp-includes/taxonomy.php */
+					do_action( 'edit_term_taxonomy', $tt_id, $taxonomy );
+				}
+				$wpdb->query( $update_query ); // WPCS: unprepared SQL ok.
+				foreach ( $tt_ids as $tt_id ) {
+					/** This action is documented in wp-includes/taxonomy.php */
+					do_action( 'edited_term_taxonomy', $tt_id, $taxonomy );
 				}
 			} // End if().
 
