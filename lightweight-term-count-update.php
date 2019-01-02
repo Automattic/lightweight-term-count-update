@@ -220,7 +220,7 @@ class LTCU_Plugin {
 
 			// Respect if a taxonomy has a callback override.
 			if ( ! empty( $tax_obj->update_count_callback ) ) {
-				call_user_func( $tax_obj->update_count_callback, $tt_ids, $tax_obj->name );
+				call_user_func( $tax_obj->update_count_callback, $tt_ids, $tax_obj );
 			} elseif ( ! empty( $tt_ids ) ) {
 				if ( ! isset( $this->counted_terms[ $object_id ][ $taxonomy ][ $transition_type ] ) ) {
 					$this->counted_terms[ $object_id ][ $taxonomy ][ $transition_type ] = array();
