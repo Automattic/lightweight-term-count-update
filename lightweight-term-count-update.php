@@ -238,6 +238,8 @@ class LTCU_Plugin {
 					$this->counted_terms[ $object_id ][ $taxonomy ][ $transition_type ],
 					$tt_ids
 				);
+
+				$tt_ids = array_map( 'absint', $tt_ids );
 				$tt_ids_string = '(' . implode( ',', $tt_ids ) . ')';
 
 				if ( 'increment' === $transition_type ) {
