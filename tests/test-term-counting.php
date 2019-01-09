@@ -359,7 +359,7 @@ class TermCountingTest extends WP_UnitTestCase {
 
 					//confirm parameters are as expected
 					$this->assertTrue( is_int($terms) || is_array( $terms ) );
-					$this->assertInstanceOf( 'WP_Terms', $taxonomy );
+					$this->assertInstanceOf( 'WP_Term', $taxonomy );
 
 					foreach ( (array) $terms as $term ) {
 
