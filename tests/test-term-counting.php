@@ -10,8 +10,8 @@
  */
 class TermCountingTest extends WP_UnitTestCase {
 
-	function setUp() {
-		parent::setUp();
+	function set_up() {
+		parent::set_up();
 
 		// Reset the counted terms cache.
 		LTCU_Plugin::instance()->counted_terms = array();
@@ -423,13 +423,13 @@ class TermCountingTest extends WP_UnitTestCase {
 			$GLOBALS['ltcu_fired_action_taxonomy'] = $taxonomy;
 		}, 10, 2 );
 
-		$post_ids = self::factory()->post->create( array(
+		$post_id = self::factory()->post->create( array(
 			'post_type' => 'post',
 			'post_status' => 'publish',
 			'post_category' => $testcats,
 		) );
 
-		wp_set_object_terms( $post_ids[0], wp_list_pluck( $testcats, 'term_id' ), 'category' );
+		wp_set_object_terms( $post_id, $testcats, 'category' );
 
 		// Prepare the comparison.
 		$tt_ids = array();

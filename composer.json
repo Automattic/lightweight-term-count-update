@@ -1,0 +1,13 @@
+{
+    "name": "automattic/lightweight-term-count-update",
+    "description": "This plugin prevents WordPress from running term count queries, instead performing a simple increment/decrement on the post count.",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "require-dev": {
+        "phpunit/phpunit": "^5.7.21 || ^7.5",
+        "yoast/phpunit-polyfills": "^1.0"
+    },
+    "scripts": {
+        "phpunit": "vendor/bin/phpunit"
+    }
+}
